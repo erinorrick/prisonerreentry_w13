@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>From Problem to Brief</title>
+<style>
+  :root { --gold:#CFB87C; --black:#000000; --paper:#F7F5F0; --line:#E0DCD0; --ink:#1A1A1A; --muted:#5A5A5A; --link:#8A6D1D; --green:#2F6B3A; --red:#8C2B1E; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#FFFFFF; color:var(--ink); font-family:'Lato','Helvetica Neue',Arial,sans-serif; line-height:1.55; }
+  .wrap { max-width:880px; margin:0 auto; padding:16px; }
+  .banner { background:var(--black); color:#FFF; padding:22px 26px; border-radius:4px; }
+  .eyebrow { color:var(--gold); font-size:13px; letter-spacing:2px; text-transform:uppercase; font-weight:700; margin:0; }
+  .banner h1 { margin:6px 0 2px 0; font-size:26px; }
+  .banner p.sub { margin:0; color:var(--gold); }
+  .progress { height:8px; background:var(--line); border-radius:4px; margin:14px 0 4px; overflow:hidden; }
+  .progress > div { height:100%; background:var(--gold); width:0; transition:width .3s; }
+  .steplabel { font-size:13px; color:var(--muted); margin-bottom:12px; }
+  .screen { display:none; }
+  .screen.active { display:block; }
+  h2 { font-size:21px; border-bottom:3px solid var(--gold); padding-bottom:5px; margin:18px 0 12px; }
+  h3 { font-size:17px; margin:0 0 6px; }
+  .box { background:var(--paper); border-left:6px solid var(--gold); padding:14px 18px; border-radius:2px; margin:12px 0; }
+  .outline { border:2px solid var(--gold); border-radius:4px; padding:14px 18px; margin:12px 0; }
+  .dark { background:var(--black); color:#FFF; padding:16px 20px; border-radius:4px; margin:12px 0; }
+  .dark strong { color:var(--gold); }
+  .card { border:1px solid var(--line); border-radius:6px; padding:16px 18px; margin:12px 0; background:#FFF; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+  .card.grad { border:2px solid var(--black); }
+  .tag { display:inline-block; font-size:11px; font-weight:700; letter-spacing:.5px; padding:2px 8px; border-radius:3px; background:#EDEAE0; margin-right:4px; }
+  .tag.a { background:var(--black); color:var(--gold); }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0; }
+  .chip { border:2px solid var(--black); background:#FFF; padding:6px 12px; border-radius:20px; cursor:pointer; font-size:14px; font-family:inherit; color:var(--ink); }
+  .chip.on { background:var(--black); color:var(--gold); }
+  label.f { display:block; font-weight:700; font-size:14px; margin:12px 0 4px; }
+  .hint { font-weight:400; color:var(--muted); font-size:13px; }
+  textarea, input[type=text] { width:100%; font-family:inherit; font-size:15px; padding:8px 10px; border:1px solid #BDB8A8; border-radius:4px; }
+  textarea { min-height:80px; }
+  .btnrow { display:flex; justify-content:space-between; gap:10px; margin:18px 0 8px; }
+  button.nav { background:var(--black); color:var(--gold); border:none; padding:10px 20px; font-size:15px; font-weight:700; border-radius:4px; cursor:pointer; font-family:inherit; }
+  button.nav.secondary { background:#FFF; color:var(--black); border:2px solid var(--black); }
+  button.nav:disabled { opacity:.4; cursor:not-allowed; }
+  button.add { background:#FFF; color:var(--black); border:2px dashed var(--black); padding:8px 16px; font-size:14px; font-weight:700; border-radius:4px; cursor:pointer; font-family:inherit; }
+  .msg { color:var(--red); font-size:14px; min-height:20px; }
+  .count { font-size:13px; color:var(--muted); text-align:right; }
+  .count.over { color:var(--red); font-weight:700; }
+  .count.good { color:var(--green); }
+  .small { font-size:13px; color:var(--muted); }
+  .seg { display:inline-flex; flex-wrap:wrap; border:2px solid var(--black); border-radius:4px; overflow:hidden; }
+  .seg button { border:none; background:#FFF; padding:6px 10px; font-family:inherit; font-size:13px; cursor:pointer; border-right:1px solid var(--line); color:var(--ink); }
+  .seg button:last-child { border-right:none; }
+  .seg button.on { background:var(--black); color:var(--gold); font-weight:700; }
+  table.types { width:100%; border-collapse:collapse; font-size:14px; margin:8px 0; }
+  table.types th { background:var(--black); color:#FFF; text-align:left; padding:7px 10px; }
+  table.types td { padding:7px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  table.types tr:nth-child(odd) td { background:var(--paper); }
+  .claim { background:var(--paper); border-left:6px solid var(--black); padding:12px 16px; margin:12px 0 4px; border-radius:2px; }
+  .meter { height:12px; background:var(--line); border-radius:6px; overflow:hidden; margin:6px 0; }
+  .meter > div { height:100%; background:var(--gold); width:0; }
+  .meter.over > div { background:var(--red); }
+  pre#summary { white-space:pre-wrap; background:var(--paper); padding:14px; border-radius:4px; font-family:inherit; font-size:14px; }
+  ul.tight { margin:6px 0 0; padding-left:18px; font-size:14px; }
+  ul.tight li { margin-bottom:4px; }
+  @media (max-width:640px){
+    .seg { display:flex; flex-direction:column; width:100%; }
+    .seg button { border-right:none; border-bottom:1px solid var(--line); text-align:left; }
+    table.types td, table.types th { padding:6px; font-size:13px; }
+    .banner { padding:18px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="banner">
+    <p class="eyebrow">Week 13 Engagement Activity &middot; Policy Brief Prewriting</p>
+    <h1>From Problem to Brief</h1>
+    <p class="sub">A structured outline for your policy brief, built on your own population.</p>
+  </div>
+  <div class="progress"><div id="bar"></div></div>
+  <div class="steplabel" id="steplabel"></div>
+
+  <!-- 0 SETUP -->
+  <section class="screen" data-s="0">
+    <h2>Before You Start</h2>
+    <p>This activity turns your Milestone 3 problem statement into a structured outline for your policy brief. You will work through five parts: the problem, your key evidence, a stress test of this week's framework, a policy option, and the strongest argument against it. At the end, the activity assembles your outline and checks it against the two-page limit.</p>
+    <div class="box">
+      <p style="margin:0 0 6px;"><strong>Have these open:</strong></p>
+      <ul class="tight">
+        <li>Your Milestone 3 problem statement and background draft</li>
+        <li>Your Milestone 2 annotated bibliography</li>
+        <li>This week's readings, especially Kazemian (2021)</li>
+      </ul>
+    </div>
+    <p class="small">Everything in the outline comes from you. The activity organizes and checks your work; it does not supply evidence or arguments. Nothing you type here is saved if you close or reload the page, so plan to finish in one sitting or copy your work as you go.</p>
+    <label class="f" for="sname">Your name <span class="hint">(appears on your submission)</span></label>
+    <input type="text" id="sname" autocomplete="name">
+    <p style="margin-top:10px;"><label><input type="checkbox" id="isGrad"> I am an MCJ graduate student (adds the [GRAD] theoretical framing and methodological note)</label></p>
+    <div class="msg" id="msg0"></div>
+  </section>
+
+  <!-- 1 POPULATION AND PROBLEM -->
+  <section class="screen" data-s="1">
+    <h2>Part 1: Population and Problem</h2>
+    <p><strong>Which population is your policy brief about?</strong></p>
+    <div class="chips" id="popChips">
+      <button type="button" class="chip" data-v="sex">People convicted of sex offenses</button>
+      <button type="button" class="chip" data-v="aging">Older adults / aging in prison</button>
+      <button type="button" class="chip" data-v="vet">Veterans</button>
+      <button type="button" class="chip" data-v="imm">Noncitizens / the immigration nexus</button>
+      <button type="button" class="chip" data-v="other">Another population</button>
+    </div>
+    <div id="otherWrap" style="display:none;">
+      <label class="f" for="popOther">Name your population <span class="hint">(for example, women leaving prison, young adults 18 to 24, people with serious mental illness)</span></label>
+      <input type="text" id="popOther">
+    </div>
+    <div class="box" id="popNote" style="display:none;"></div>
+
+    <label class="f" for="m3">Paste your Milestone 3 problem statement <span class="hint">(optional; for your reference while you revise. It is not included in your outline.)</span></label>
+    <textarea id="m3" style="min-height:110px;"></textarea>
+
+    <div class="outline">
+      <label class="f" for="prob" style="margin-top:0;">Your problem statement, outline version <span class="hint">(40 to 90 words)</span></label>
+      <p class="small" style="margin:0 0 8px;">Cut your Milestone 3 statement to its core. A strong outline version names who is affected, what the problem is, and why it matters for reentry and public safety, and it includes at least one figure with its source.</p>
+      <textarea id="prob"></textarea>
+      <div class="count" id="probCount">0 words</div>
+    </div>
+    <div class="msg" id="msg1"></div>
+  </section>
+
+  <!-- 2 EVIDENCE -->
+  <section class="screen" data-s="2">
+    <h2>Part 2: Key Evidence</h2>
+    <p>List three or four evidence points your brief will rest on. For each one, classify the kind of claim it supports and who it was tested on. That second question is the differential lens (CLO 4): a finding tested on one group does not automatically apply to another.</p>
+    <table class="types">
+      <tr><th>Type of claim</th><th>What it can show</th><th>Example from the course</th></tr>
+      <tr><td><strong>Descriptive</strong></td><td>How many, how often, what a group looks like</td><td>Maruschak et al. (2021): the profile of veterans in prison in 2016</td></tr>
+      <tr><td><strong>Association</strong></td><td>Two things go together; does not show that one causes the other</td><td>Wong &amp; Hickman (2022): a prior removal did not predict rearrest</td></tr>
+      <tr><td><strong>Causal</strong></td><td>One thing changes another; requires a design that rules out other explanations</td><td>Aizer &amp; Doyle (2015, Week 12): random assignment of judges</td></tr>
+      <tr><td><strong>Program or policy evaluation</strong></td><td>Outcomes for people in a program or under a policy; whether it shows an effect depends on the design</td><td>Baldwin &amp; Hartley (2022): outcomes for veterans treatment court participants, with no comparison group</td></tr>
+    </table>
+    <div id="evList"></div>
+    <p><button type="button" class="add" id="addEv">+ Add a fourth evidence point</button></p>
+    <div class="card" id="gapWrap" style="display:none; border:2px solid var(--red);">
+      <h3>None of your evidence was tested on your population.</h3>
+      <p class="small" style="margin:0 0 6px;">That is common for these populations, and it is worth saying in your brief. Explain the gap: what group the evidence comes from, why you think it does or does not transfer, and what evidence you would want instead. (At least 20 words.)</p>
+      <textarea id="gap"></textarea>
+      <div class="count" id="gapCount">0 words</div>
+    </div>
+    <div class="msg" id="msg2"></div>
+  </section>
+
+  <!-- 3 STRESS TEST -->
+  <section class="screen" data-s="3">
+    <h2>Part 3: Stress-Test the Framework</h2>
+    <p>Kazemian (2021) makes three claims about desistance that run through this week. Your population may fit them, fit them partly, or push back against them. For each claim, decide and give a one- or two-sentence reason grounded in your evidence.</p>
+    <div id="stList"></div>
+    <div class="box">
+      <p style="margin:0; font-size:14px;"><strong>Keep in mind:</strong> Kazemian herself acknowledges that a small group remains active in crime later in life and says they should be assessed case by case. A claim that is true on average can still leave room for the public safety concerns about specific individuals.</p>
+    </div>
+    <div class="msg" id="msg3"></div>
+  </section>
+
+  <!-- 4 POLICY OPTION -->
+  <section class="screen" data-s="4">
+    <h2>Part 4: Policy Option</h2>
+    <p>Propose at least one specific policy option. "More funding for reentry" is a direction, not an option. A specific option says what changes, who does it, and which of your evidence points supports it.</p>
+    <div id="poList"></div>
+    <p><button type="button" class="add" id="addPo">+ Add a second policy option</button></p>
+    <div class="msg" id="msg4"></div>
+  </section>
+
+  <!-- 5 BOTH PERSPECTIVES AND OPPOSITION -->
+  <section class="screen" data-s="5">
+    <h2>Part 5: Both Perspectives and the Strongest Opposition</h2>
+    <div class="dark">
+      <p style="margin:0 0 6px;"><strong>Rehabilitative perspective:</strong> emphasizes desistance with age and time, the limited evidence behind many restrictions, and the role of care, benefits, and stability in successful reentry.</p>
+      <p style="margin:0;"><strong>Public safety perspective:</strong> emphasizes the seriousness of some offenses, the specific risks the data do show, the stake of victims and communities, and the government's interest in monitoring or removing people it considers dangerous.</p>
+    </div>
+    <p>Your brief will make a recommendation, but it should not pretend the other perspective is absent. Start by stating how each perspective would view your Option 1.</p>
+    <label class="f" for="rehab">How would the rehabilitative perspective view your option? <span class="hint">(at least 15 words)</span></label>
+    <textarea id="rehab"></textarea>
+    <div class="count" id="rehabCount">0 words</div>
+    <label class="f" for="ps">How would the public safety perspective view your option? <span class="hint">(at least 15 words)</span></label>
+    <textarea id="ps"></textarea>
+    <div class="count" id="psCount">0 words</div>
+
+    <div class="outline">
+      <label class="f" for="opp" style="margin-top:0;">The strongest argument against your option <span class="hint">(at least 30 words)</span></label>
+      <p class="small" style="margin:0 0 8px;">Write it the way a thoughtful opponent would, at full strength, using the best evidence or values they could draw on. A weak version of the opposing argument makes your brief weaker, not stronger.</p>
+      <textarea id="opp"></textarea>
+      <div class="count" id="oppCount">0 words</div>
+      <p style="margin:10px 0 4px; font-weight:700; font-size:14px;">Which perspective does this argument mainly come from?</p>
+      <div class="seg" data-k="oppPersp"><button type="button" data-v="Public safety">Public safety</button><button type="button" data-v="Rehabilitative">Rehabilitative</button><button type="button" data-v="Both">Both</button></div>
+      <p class="small" style="margin:6px 0 0;">An opposing argument can come from either side. A rehabilitative critic might argue that your option does too little, or that it adds conditions people will violate.</p>
+      <label class="f" for="resp">Your response <span class="hint">(at least 30 words; you may concede part of the argument)</span></label>
+      <textarea id="resp"></textarea>
+      <div class="count" id="respCount">0 words</div>
+    </div>
+    <div class="msg" id="msg5"></div>
+  </section>
+
+  <!-- 6 GRAD -->
+  <section class="screen" data-s="6">
+    <h2>[GRAD] Theoretical Framing and Methodological Note</h2>
+    <div class="card grad">
+      <span class="tag a">GRAD</span>
+      <h3 style="margin-top:6px;">Theoretical framing</h3>
+      <label class="f" for="thName">Theory or theoretical framework</label>
+      <input type="text" id="thName">
+      <label class="f" for="thMech">What does it predict or explain about your population's reentry? <span class="hint">(at least 30 words)</span></label>
+      <textarea id="thMech"></textarea>
+      <div class="count" id="thMechCount">0 words</div>
+      <label class="f" for="thLink">How does it shape your policy option? <span class="hint">(at least 20 words)</span></label>
+      <textarea id="thLink"></textarea>
+      <div class="count" id="thLinkCount">0 words</div>
+    </div>
+    <div class="card grad">
+      <span class="tag a">GRAD</span>
+      <h3 style="margin-top:6px;">Methodological note on the evidence</h3>
+      <p class="small" style="margin:0;">Assess the quality of your evidence on four questions: the design, whether there is a comparison group, how the outcome was measured (arrest, conviction, self-report, return to prison), and whether the sample matches your population.</p>
+      <p style="margin:12px 0 4px; font-weight:700; font-size:14px;">Your strongest evidence point</p>
+      <div class="chips" id="strongChips"></div>
+      <textarea id="strongWhy" placeholder="Why it is the strongest (at least 25 words)"></textarea>
+      <div class="count" id="strongWhyCount">0 words</div>
+      <p style="margin:12px 0 4px; font-weight:700; font-size:14px;">Your weakest evidence point</p>
+      <div class="chips" id="weakChips"></div>
+      <textarea id="weakWhy" placeholder="Why it is the weakest, and why you are using it anyway (at least 25 words)"></textarea>
+      <div class="count" id="weakWhyCount">0 words</div>
+      <label class="f" for="change">What evidence would change your recommendation? <span class="hint">(at least 15 words)</span></label>
+      <textarea id="change"></textarea>
+      <div class="count" id="changeCount">0 words</div>
+    </div>
+    <div class="msg" id="msg6"></div>
+  </section>
+
+  <!-- 7 SUMMARY -->
+  <section class="screen" data-s="7">
+    <h2>Your Outline</h2>
+    <div class="card">
+      <p style="margin:0;"><strong>Length check:</strong> <span id="lenText"></span></p>
+      <div class="meter" id="meter"><div id="meterBar"></div></div>
+      <p class="small" id="lenNote" style="margin:0;"></p>
+    </div>
+    <p>Click <strong>Copy my outline</strong>, then paste it into the Week 13 Policy Brief Prewriting submission box in Canvas. You can use <strong>Back</strong> to revise any part first.</p>
+    <p><button type="button" class="nav" id="copyBtn">Copy my outline</button> <span id="copyStatus" class="small"></span></p>
+    <div id="fallback" style="display:none;">
+      <p class="small">If copying did not work, click inside the box below, select all (Ctrl+A or Cmd+A), and copy (Ctrl+C or Cmd+C).</p>
+      <textarea id="fallbackText" style="min-height:260px;" readonly></textarea>
+    </div>
+    <pre id="summary"></pre>
+    <p class="small">Nothing you type here is saved after you close or reload this page. Copy your outline before leaving.</p>
+  </section>
+
+  <div class="btnrow">
+    <button type="button" class="nav secondary" id="back">Back</button>
+    <button type="button" class="nav" id="next">Next</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var NAMES = ['Before you start','Population and problem','Key evidence','Stress-test the framework','Policy option','Both perspectives and opposition','[GRAD] Theory and methods','Your outline'];
+  var POP = {
+    sex: { label:'People convicted of sex offenses', note:'<strong>This week\'s sources for your population:</strong> Alper &amp; Durose (2019) on 9-year rearrest patterns, Zgoba &amp; Mitchell (2023) on registration and notification [GRAD], and Kazemian (2021) on lifetime registration. Use them alongside the sources in your annotated bibliography.' },
+    aging: { label:'Older adults / aging in prison', note:'<strong>This week\'s sources for your population:</strong> the SB 25-190 study (Colorado special needs parole), the PBS NewsHour segment on older parolees, Onyeali et al. (2023) [OPT], and Kazemian (2021) on age and desistance. Maruschak et al. (2021) is also relevant: veterans in state prison are older on average than non-veterans.' },
+    vet: { label:'Veterans', note:'<strong>This week\'s sources for your population:</strong> Maruschak et al. (2021) on veterans in prison and Baldwin &amp; Hartley (2022) on veterans treatment courts [GRAD]. The aging sources may also apply, since many veterans in prison are older.' },
+    imm: { label:'Noncitizens / the immigration nexus', note:'<strong>This week\'s source for your population:</strong> Wong &amp; Hickman (2022) on rearrest after removal. Evidence on this population is thin, so the gap step in Part 2 may apply to you. That is a finding worth reporting, not a failure of your research.' },
+    other: { label:'', note:'<strong>Your population is not one of this week\'s four.</strong> Draw on the week of the course that covered your population and on your annotated bibliography. Read this week\'s four sources anyway, and use Part 3 to test whether Kazemian\'s claims hold for your group.' }
+  };
+  var TYPES = ['Descriptive','Association','Causal','Program or policy evaluation'];
+  var TESTED = ['My population','A different or broader group','Unclear'];
+  var ST = [
+    { id:'age', t:'Offending declines with age.', d:'Kazemian writes that few individuals remain active in crime after age 40, and that there is no empirical basis for incarcerating people for decades past mid-adulthood, barring exceptional cases.' },
+    { id:'time', t:'Risk falls with time offense-free.', d:'Kazemian cites research estimating that people who remain arrest-free for about seven years have a future arrest risk nearly indistinguishable from that of people with no criminal record.' },
+    { id:'restrict', t:'Long sentences and lifetime restrictions add little public safety.', d:'Kazemian argues that sentence length is unrelated to future offending, that lifetime bans have no empirical basis, and that lifetime sex offense registration has limited public safety benefit.' }
+  ];
+  var VERDICT = ['Holds','Holds partly','Does not hold','Not enough evidence to say'];
+  var WHO = ['State legislature','Corrections agency (e.g., CDOC)','Parole board','Courts','Probation or parole supervision','Federal government','Community or nonprofit providers','Other'];
+
+  var state = { s:0, pop:null, nEv:3, nPo:1, sel:{}, sup:{1:[],2:[]}, strong:null, weak:null };
+
+  function $(id){ return document.getElementById(id); }
+  function words(t){ t=(t||'').trim(); return t ? t.split(/\s+/).length : 0; }
+  function val(id){ var e=$(id); return e ? e.value.trim() : ''; }
+  function isGrad(){ return $('isGrad').checked; }
+  function cap(){ return isGrad() ? 1100 : 900; }
+
+  function segHTML(key, opts){ return '<div class="seg" data-k="'+key+'">'+opts.map(function(o){ return '<button type="button" data-v="'+o+'">'+o+'</button>'; }).join('')+'</div>'; }
+  function counter(id){ return '<div class="count" id="'+id+'Count">0 words</div>'; }
+
+  // evidence cards
+  var ev='';
+  for (var i=1;i<=4;i++){
+    ev+='<div class="card" id="evCard'+i+'"'+(i===4?' style="display:none;"':'')+'><h3>Evidence point E'+i+(i===4?' <span class="hint">(optional)</span>':'')+'</h3>'+
+      '<label class="f" for="evClaim'+i+'">What does the evidence show? In your own words. <span class="hint">(at least 12 words)</span></label><textarea id="evClaim'+i+'"></textarea>'+counter('evClaim'+i)+
+      '<label class="f" for="evSrc'+i+'">Source <span class="hint">(author and year)</span></label><input type="text" id="evSrc'+i+'">'+
+      '<p style="margin:12px 0 4px; font-weight:700; font-size:14px;">Type of claim</p>'+segHTML('evType'+i, TYPES)+
+      '<p style="margin:12px 0 4px; font-weight:700; font-size:14px;">Who was it tested on or drawn from?</p>'+segHTML('evTested'+i, TESTED)+
+      '<label class="f" for="evLimit'+i+'">What can this evidence not tell you? <span class="hint">(at least 6 words)</span></label><input type="text" id="evLimit'+i+'">'+
+      (i===4?'<p style="margin:10px 0 0;"><button type="button" class="add" id="rmEv">Remove this evidence point</button></p>':'')+
+      '</div>';
+  }
+  $('evList').innerHTML=ev;
+
+  // stress test
+  $('stList').innerHTML = ST.map(function(c,k){
+    return '<div class="card"><div class="claim"><p style="margin:0 0 4px;"><strong>Claim '+(k+1)+': '+c.t+'</strong></p><p style="margin:0; font-size:14px;">'+c.d+'</p></div>'+
+      '<p style="margin:12px 0 4px; font-weight:700; font-size:14px;">For your population, this claim:</p>'+segHTML('st_'+c.id, VERDICT)+
+      '<label class="f" for="stWhy_'+c.id+'">Why? <span class="hint">(at least 12 words)</span></label><textarea id="stWhy_'+c.id+'" style="min-height:64px;"></textarea>'+counter('stWhy_'+c.id)+'</div>';
+  }).join('');
+
+  // policy options
+  var po='';
+  for (var j=1;j<=2;j++){
+    po+='<div class="card" id="poCard'+j+'"'+(j===2?' style="display:none;"':'')+'><h3>Option '+j+(j===2?' <span class="hint">(optional)</span>':'')+'</h3>'+
+      '<label class="f" for="poWhat'+j+'">What would change? <span class="hint">(at least 15 words)</span></label><textarea id="poWhat'+j+'"></textarea>'+counter('poWhat'+j)+
+      '<p style="margin:12px 0 4px; font-weight:700; font-size:14px;">Who would carry it out?</p>'+segHTML('poWho'+j, WHO)+
+      '<div id="poWhoOtherWrap'+j+'" style="display:none;"><label class="f" for="poWhoOther'+j+'">Name who</label><input type="text" id="poWhoOther'+j+'"></div>'+
+      '<p style="margin:12px 0 4px; font-weight:700; font-size:14px;">Which of your evidence points support it? <span class="hint">(choose at least one)</span></p><div class="chips" id="poSup'+j+'"></div>'+
+      (j===2?'<p style="margin:10px 0 0;"><button type="button" class="add" id="rmPo">Remove this option</button></p>':'')+
+      '</div>';
+  }
+  $('poList').innerHTML=po;
+
+  function evNums(){ var a=[]; for (var i=1;i<=state.nEv;i++) a.push(i); return a; }
+  function renderEvChips(){
+    [1,2].forEach(function(j){
+      state.sup[j]=state.sup[j].filter(function(n){ return n<=state.nEv; });
+      $('poSup'+j).innerHTML=evNums().map(function(n){ return '<button type="button" class="chip'+(state.sup[j].indexOf(n)>-1?' on':'')+'" data-n="'+n+'">E'+n+'</button>'; }).join('');
+    });
+    if (state.strong>state.nEv) state.strong=null;
+    if (state.weak>state.nEv) state.weak=null;
+    $('strongChips').innerHTML=evNums().map(function(n){ return '<button type="button" class="chip'+(state.strong===n?' on':'')+'" data-n="'+n+'">E'+n+'</button>'; }).join('');
+    $('weakChips').innerHTML=evNums().map(function(n){ return '<button type="button" class="chip'+(state.weak===n?' on':'')+'" data-n="'+n+'">E'+n+'</button>'; }).join('');
+  }
+  document.addEventListener('click', function(e){
+    var b=e.target.closest ? e.target.closest('button') : null; if(!b) return;
+    var par=b.parentNode;
+    if (par.id && par.id.indexOf('poSup')===0){ var j=+par.id.slice(5), n=+b.getAttribute('data-n'); var k=state.sup[j].indexOf(n); if(k>-1) state.sup[j].splice(k,1); else state.sup[j].push(n); state.sup[j].sort(); b.classList.toggle('on'); }
+    if (par.id==='strongChips'){ state.strong=+b.getAttribute('data-n'); renderEvChips(); }
+    if (par.id==='weakChips'){ state.weak=+b.getAttribute('data-n'); renderEvChips(); }
+    if (par.classList && par.classList.contains('seg')){
+      var key=par.getAttribute('data-k'); state.sel[key]=b.getAttribute('data-v');
+      par.querySelectorAll('button').forEach(function(x){ x.classList.toggle('on', x===b); });
+      if (key.indexOf('evTested')===0) gapCheck();
+      if (key.indexOf('poWho')===0){ var jj=key.slice(5); $('poWhoOtherWrap'+jj).style.display = state.sel[key]==='Other' ? 'block' : 'none'; }
+    }
+  });
+
+  // population chips
+  document.querySelectorAll('#popChips .chip').forEach(function(ch){
+    ch.addEventListener('click', function(){
+      state.pop=ch.getAttribute('data-v');
+      document.querySelectorAll('#popChips .chip').forEach(function(x){ x.classList.toggle('on', x===ch); });
+      $('otherWrap').style.display = state.pop==='other' ? 'block' : 'none';
+      $('popNote').style.display='block'; $('popNote').innerHTML='<p style="margin:0; font-size:14px;">'+POP[state.pop].note+'</p>';
+    });
+  });
+
+  $('addEv').addEventListener('click', function(){ state.nEv=4; $('evCard4').style.display='block'; $('addEv').style.display='none'; renderEvChips(); gapCheck(); });
+  $('rmEv').addEventListener('click', function(){ state.nEv=3; $('evCard4').style.display='none'; $('addEv').style.display=''; renderEvChips(); gapCheck(); });
+  $('addPo').addEventListener('click', function(){ state.nPo=2; $('poCard2').style.display='block'; $('addPo').style.display='none'; });
+  $('rmPo').addEventListener('click', function(){ state.nPo=1; $('poCard2').style.display='none'; $('addPo').style.display=''; });
+
+  // counters
+  document.querySelectorAll('textarea').forEach(function(t){
+    t.addEventListener('input', function(){ var c=$(t.id+'Count'); if(c) c.textContent=words(t.value)+' words'; if(t.id==='prob') probCount(); });
+  });
+  function probCount(){ var n=words($('prob').value), c=$('probCount'); c.textContent=n+' words (target 40 to 90)'; c.className='count'+(n>90?' over':(n>=40?' good':'')); }
+
+  function anyMine(){ for (var i=1;i<=state.nEv;i++){ if(state.sel['evTested'+i]==='My population') return true; } return false; }
+  function allTestedSet(){ for (var i=1;i<=state.nEv;i++){ if(!state.sel['evTested'+i]) return false; } return true; }
+  function gapCheck(){ $('gapWrap').style.display = (allTestedSet() && !anyMine()) ? 'block' : 'none'; }
+
+  function popLabel(){ if(!state.pop) return ''; return state.pop==='other' ? val('popOther') : POP[state.pop].label; }
+  function whoText(j){ var w=state.sel['poWho'+j]||''; return w==='Other' ? (val('poWhoOther'+j)||'Other') : w; }
+
+  function outline(){
+    var L=[];
+    L.push('POLICY BRIEF OUTLINE: '+(popLabel()||'(population not named)').toUpperCase());
+    L.push('Week 13 Engagement Activity: Policy Brief Prewriting');
+    L.push('Name: '+(val('sname')||'(no name entered)')+(isGrad()?'  [GRAD]':'  [UG]'));
+    L.push('');
+    L.push('1. PROBLEM STATEMENT');
+    L.push(val('prob'));
+    L.push('');
+    L.push('2. KEY EVIDENCE');
+    for (var i=1;i<=state.nEv;i++){
+      L.push('E'+i+'. '+val('evClaim'+i)+' ('+val('evSrc'+i)+')');
+      L.push('    Type: '+(state.sel['evType'+i]||'-')+' | Tested on: '+(state.sel['evTested'+i]||'-'));
+      L.push('    Limit: '+val('evLimit'+i));
+    }
+    if (!anyMine()){ L.push('Evidence gap: '+val('gap')); }
+    L.push('');
+    L.push('3. FRAMEWORK STRESS TEST (Kazemian, 2021)');
+    ST.forEach(function(c,k){ L.push('Claim '+(k+1)+', '+c.t+' '+(state.sel['st_'+c.id]||'-')+'. '+val('stWhy_'+c.id)); });
+    L.push('');
+    L.push('4. POLICY OPTION'+(state.nPo>1?'S':''));
+    for (var j=1;j<=state.nPo;j++){
+      L.push('Option '+j+': '+val('poWhat'+j));
+      L.push('    Carried out by: '+whoText(j)+' | Supported by: '+state.sup[j].map(function(n){ return 'E'+n; }).join(', '));
+    }
+    L.push('');
+    L.push('5. BOTH PERSPECTIVES AND THE STRONGEST OPPOSITION');
+    L.push('Rehabilitative perspective on Option 1: '+val('rehab'));
+    L.push('Public safety perspective on Option 1: '+val('ps'));
+    L.push('Strongest opposing argument ('+(state.sel.oppPersp||'-')+' perspective): '+val('opp'));
+    L.push('Response: '+val('resp'));
+    if (isGrad()){
+      L.push('');
+      L.push('6. [GRAD] THEORETICAL FRAMING');
+      L.push('Theory: '+val('thName'));
+      L.push('What it explains: '+val('thMech'));
+      L.push('How it shapes the option: '+val('thLink'));
+      L.push('');
+      L.push('7. [GRAD] METHODOLOGICAL NOTE');
+      L.push('Strongest evidence (E'+(state.strong||'-')+'): '+val('strongWhy'));
+      L.push('Weakest evidence (E'+(state.weak||'-')+'): '+val('weakWhy'));
+      L.push('Evidence that would change the recommendation: '+val('change'));
+    }
+    return L.join('\n');
+  }
+
+  function need(id,n,label){ return words(val(id))<n ? label+' needs at least '+n+' words.' : ''; }
+  function validate(s){
+    var m='';
+    if (s===1){
+      if(!state.pop) m='Choose your population.';
+      else if(state.pop==='other' && !val('popOther')) m='Name your population.';
+      else { var n=words(val('prob')); if(n<40||n>90) m='Your outline problem statement should be 40 to 90 words (it is '+n+').'; }
+    }
+    if (s===2){
+      for (var i=1;i<=state.nEv && !m;i++){
+        if(words(val('evClaim'+i))<12) m='E'+i+': describe the evidence in at least 12 words.';
+        else if(!val('evSrc'+i)) m='E'+i+': add the source.';
+        else if(!state.sel['evType'+i]) m='E'+i+': choose the type of claim.';
+        else if(!state.sel['evTested'+i]) m='E'+i+': choose who it was tested on.';
+        else if(words(val('evLimit'+i))<6) m='E'+i+': say what this evidence cannot tell you (at least 6 words).';
+      }
+      if(!m && !anyMine() && words(val('gap'))<20) m='Explain the evidence gap (at least 20 words).';
+    }
+    if (s===3){ ST.forEach(function(c,k){ if(!m && !state.sel['st_'+c.id]) m='Claim '+(k+1)+': choose a verdict.'; if(!m && words(val('stWhy_'+c.id))<12) m='Claim '+(k+1)+': give a reason of at least 12 words.'; }); }
+    if (s===4){
+      for (var j=1;j<=state.nPo && !m;j++){
+        if(words(val('poWhat'+j))<15) m='Option '+j+': describe what would change in at least 15 words.';
+        else if(!state.sel['poWho'+j]) m='Option '+j+': choose who would carry it out.';
+        else if(state.sel['poWho'+j]==='Other' && !val('poWhoOther'+j)) m='Option '+j+': name who would carry it out.';
+        else if(!state.sup[j].length) m='Option '+j+': choose at least one supporting evidence point.';
+      }
+    }
+    if (s===5){
+      m = need('rehab',15,'The rehabilitative perspective') || need('ps',15,'The public safety perspective') || need('opp',30,'The opposing argument') ||
+          (!state.sel.oppPersp ? 'Choose which perspective the opposing argument comes from.' : '') || need('resp',30,'Your response');
+    }
+    if (s===6){
+      m = (!val('thName') ? 'Name the theory or framework.' : '') || need('thMech',30,'What the theory explains') || need('thLink',20,'How the theory shapes your option') ||
+          (!state.strong ? 'Choose your strongest evidence point.' : '') || need('strongWhy',25,'Your strongest-evidence explanation') ||
+          (!state.weak ? 'Choose your weakest evidence point.' : '') || (state.weak===state.strong ? 'Your strongest and weakest evidence points should be different.' : '') ||
+          need('weakWhy',25,'Your weakest-evidence explanation') || need('change',15,'What would change your recommendation');
+    }
+    var el=$('msg'+s); if(el) el.textContent=m;
+    return !m;
+  }
+
+  function lengthCheck(t){
+    var n=words(t), c=cap(), pct=Math.min(100, n/c*100);
+    $('meterBar').style.width=pct+'%';
+    $('meter').className='meter'+(n>c?' over':'');
+    $('lenText').textContent=n+' of about '+c+' words ('+(isGrad()?'graduate':'undergraduate')+' two-page limit)';
+    $('lenNote').textContent = n>c ? 'Your outline is over the two-page limit. Use Back to tighten it before you submit; outlines that run long usually have evidence points or responses that read like paragraphs of the brief itself.' : 'Within the two-page limit.';
+    $('lenNote').style.color = n>c ? 'var(--red)' : 'var(--green)';
+  }
+
+  function nextOf(s){ return (s===5 && !isGrad()) ? 7 : s+1; }
+  function prevOf(s){ return (s===7 && !isGrad()) ? 5 : s-1; }
+  function show(s){
+    state.s=s;
+    document.querySelectorAll('.screen').forEach(function(x){ x.classList.toggle('active', +x.getAttribute('data-s')===s); });
+    var total = isGrad() ? 8 : 7, pos = (!isGrad() && s===7) ? 6 : s;
+    $('bar').style.width=(pos/(total-1)*100)+'%';
+    $('steplabel').textContent='Step '+(pos+1)+' of '+total+': '+NAMES[s];
+    $('back').disabled = s===0;
+    $('next').style.display = s===7 ? 'none' : '';
+    $('next').textContent = (s===6 || (s===5 && !isGrad())) ? 'Build my outline' : 'Next';
+    if (s===4 || s===6) renderEvChips();
+    if (s===2) gapCheck();
+    if (s===7){ var t=outline(); $('summary').textContent=t; $('fallbackText').value=t; lengthCheck(t); }
+    try { window.scrollTo(0,0); } catch(e){}
+  }
+  $('next').addEventListener('click', function(){ if(validate(state.s)) show(nextOf(state.s)); });
+  $('back').addEventListener('click', function(){ if(state.s>0) show(prevOf(state.s)); });
+  $('copyBtn').addEventListener('click', function(){
+    var t=outline();
+    function fail(){ $('fallback').style.display='block'; $('fallbackText').value=t; $('fallbackText').focus(); $('fallbackText').select(); $('copyStatus').textContent='Automatic copy is blocked here. Use the box below.'; }
+    try { if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(function(){ $('copyStatus').textContent='Copied. Paste it into the Canvas submission box.'; }, fail); } else fail(); } catch(e){ fail(); }
+  });
+  window.__activity={state:state, show:show, outline:outline, validate:validate};
+  show(0);
+})();
+</script>
+</body>
+</html>
